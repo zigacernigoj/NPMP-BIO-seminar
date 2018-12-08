@@ -1,1 +1,1 @@
-The python code of the project wil be here
+The Python code of the project must be in this directory!
