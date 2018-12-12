@@ -35,6 +35,10 @@ class Parameters:
         self.h = 0.5 # Grid size: in micro meters - E coli size 1 um x 2 um (volume = 1 um^3)
         self.h2 = self.h**2
         
+# To test if the code in this file works:
+# - uncomment the lines below 
+# - run python parameters.py in your terminal
+# The result should be value of the size
 
 # if __name__ == "__main__":
 #     params = Parameters()
