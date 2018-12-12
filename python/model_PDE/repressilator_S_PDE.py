@@ -31,7 +31,7 @@ eta = p.eta
 
 size = p.size                               
 density = p.density
-n_cells = math.ceil(density * size^2)
+n_cells = math.ceil(density * size**2)
 
 t_end = p.t_end
 dt = p.dt
