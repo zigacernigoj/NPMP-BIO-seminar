@@ -19,7 +19,7 @@ def repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd,
     dC = np.multiply(CELLS, (beta * mC - delta_p * C))
 
     dS_i = np.multiply(CELLS, (- kS0 * S_i + kS1 * A - eta * (S_i - S_e)))
-    dS_e = - kSe * S_e + CELLS. * (eta * (S_i - S_e))
+    dS_e = - kSe * S_e + np.multiply(CELLS, (eta * (S_i - S_e)))
 
     return [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e]
 
