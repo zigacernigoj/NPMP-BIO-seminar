@@ -74,9 +74,6 @@ cell_idx = np.argwhere(nums==1)
 # locations of cells in 2D matrix, already sorted
 cell_matrix_idx = np.argwhere(CELLS==1)
 
-# print("cell idx 1D", cell_idx, cell_idx.shape)
-# print("cell idx 2D", cell_matrix_idx, cell_matrix_idx.shape)
-# print("cells", CELLS)
 
 # TODO !!! (matlab code)
 # cell_idx = ceil(size^2 * rand(1, n_cells));
@@ -85,8 +82,6 @@ cell_matrix_idx = np.argwhere(CELLS==1)
 
 first_idx = cell_idx[0]
 first_matrix_idx = cell_matrix_idx[0]
-
-print(first_idx, first_matrix_idx)
 
 for (x,y) in cell_matrix_idx:
     A[x, y] = 100*np.random.rand()
@@ -100,9 +95,12 @@ A_series = np.zeros((1, int(t_end/dt)))
 S_e_series = np.zeros((1, int(t_end/dt)))
 A_full = np.zeros((int(t_end/dt), n_cells))
 
-# line 80 in matlab file
-# NOT WORKING
-# A_series[0] = A[first_idx]
+A_series[0] = A[first_matrix_idx[0], first_matrix_idx[1]]
+S_e_series[0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
+A_full[0,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
+
+
+
 
 
 if __name__ == "__main__":
