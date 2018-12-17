@@ -1,4 +1,5 @@
 from parameters import Parameters
+from repressilator_s_ODE import repressilator_S_ODE
 import math
 import numpy as np
 
@@ -74,7 +75,7 @@ cell_idx = np.argwhere(nums==1)
 # locations of cells in 2D matrix, already sorted
 cell_matrix_idx = np.argwhere(CELLS==1)
 
-
+# I DON'T KNOW
 # TODO: convert from matlab code below
 # cell_idx = ceil(size^2 * rand(1, n_cells));
 # CELLS = zeros(size,size);
@@ -95,10 +96,11 @@ A_series = np.zeros((1, int(t_end/dt)))
 S_e_series = np.zeros((1, int(t_end/dt)))
 A_full = np.zeros((int(t_end/dt), n_cells))
 
-A_series[0] = A[first_matrix_idx[0], first_matrix_idx[1]]
-S_e_series[0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
+A_series[0,0] = A[first_matrix_idx[0], first_matrix_idx[1]]
+S_e_series[0,0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
 A_full[0,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
 
+# LOAD CONF
 # TODO: convert from matlab code below
 # if (load_conf)
 #     cc = load('final_state');
@@ -107,6 +109,7 @@ A_full[0,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
 #     %i = cc.i;
 # end;
 
+# RECORD THE ACTION
 # TODO: convert from matlab code below
 # if movie_on == 1
 #     % Setup image
@@ -127,7 +130,9 @@ t = 0
 k = 0
 step = 0
 while t <= t_end:
-    print(t)
+    print("t:", t)
+    print("step:", step)
+
     if periodic_bounds:
         S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
         S_e_yy = D1 * (np.roll(S_e, 1, axis=0) + np.roll(S_e, -1, axis=0) - 2 * S_e) / h2                
@@ -145,8 +150,136 @@ while t <= t_end:
         SS_e = np.concatenate((rowBefore, between, rowAfter), axis=0)
 
         # Calculate diffusion part of the equations
-        # S_e_xx
-        # S_e_yy
+
+        leftPart = SS_e[1:-1, 0:-2]
+        rightPart = SS_e[1:-1, 2:]
+        S_e_xx = D1 * (leftPart + rightPart - 2 * S_e) / h2
+
+        upPart = SS_e[0:-2, 1:-1]
+        downPart = SS_e[2:, 1:-1]
+        S_e_yy = D1 * (upPart + downPart - 2 * S_e) / h2
+
+
+    D2S_e = S_e_xx + S_e_yy
+
+    # Calculate dx/dt
+    [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
+    
+    dS_e = dS_e + D2S_e
+
+    if borderfixed == 1:
+        width = len(dS_e)
+        dS_e[0:width-1, 0] = 0
+        dS_e[0:width-1, width-1] = 0
+         
+        dS_e[0, 0:width-1] = 0
+        dS_e[width-1, 0:width-1] = 0
+         
+
+    mA = mA + np.multiply(dt, dmA)
+    mB = mB + np.multiply(dt, dmB)
+    mC = mC + np.multiply(dt, dmC)
+    A = A + np.multiply(dt, dA)
+    B = B + np.multiply(dt, dB)
+    C = C + np.multiply(dt, dC)
+    S_i = S_i + np.multiply(dt, dS_i)
+    S_e = S_e + np.multiply(dt, dS_e)
+
+    t += dt
+    step += 1
+
+    A_series[0, step] = A[first_matrix_idx[0], first_matrix_idx[1]]
+    S_e_series[0, step] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
+    A_full[step,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
+
+    # RECORD THE ACTION
+    # TODO: convert from matlab code below
+    # if movie_on == 1
+    #     obs = S_e;
+    #   
+    #     % Map v to image grayscale value
+    #     m = 1+round(62*(obs - min_val)/max_val); m=max(m,1); m=min(m,63);
+    #     %m=1+round(63*v); m=max(m,1); m=min(m,64);
+    #
+    #      % Update image and text 
+    #     set(ih,'cdata',m);
+    #     set(th,'string',sprintf('%d  %0.2f   %0.2f',t,obs(first_idx)))
+    #     drawnow
+    #
+    #     % Write every 500th frame to movie 
+    #     %if rem(n,500)==1
+    #     if rem(step,100)==1
+    #         k=k+1;
+    #         mov(k)=getframe;
+    #     end
+    #
+    # 	if ~isempty(get(gcf,'userdata')), break; end % Quit if user clicks on 'Quit' button.
+    # end;
+
+
+    print()
+
+# SAVE CONF
+# TODO: convert from matlab code below
+# if (save_conf)
+#     save('final_state.mat','A');
+# end
+
+# RECORD THE ACTION
+# TODO: convert from matlab code below
+# if movie_on == 1
+#     %Write movie as AVI
+#     if isunix, sep='/'; else sep='\'; end
+#     [fn,pn]=uiputfile([pwd sep 'mov.avi'],'Save movie as:');
+#     if ischar(fn)
+#         movie2avi(mov,[pn fn],'quality',75)
+#     else
+#         disp('User pressed cancel')
+#     end
+#
+#     close(gcf)
+# end;
+
+
+# GRAPHS
+# TODO: convert from matlab code below
+# T=0:dt:t_end-dt;
+# % figure(1)
+# % plot(T, S_e_series, 'red')
+# % hold on
+# % xlabel('Time [min]')
+# % ylabel('Concentration [nM]')
+# % legend('S_e')
+# % hold off
+# % 
+# % figure(2)
+# % plot(T,A_series, T, S_e_series)
+# % hold on
+# % xlabel('Time [min]')
+# % ylabel('Concentration [nM]')
+# % legend('A','S_e')
+# % hold off
+
+# figure(3)
+# TT = T.';
+# TMat = repmat(TT,1,n_cells);
+# y = 1:n_cells;
+# yMat = repmat(y, numel(TT), 1); %//For plot3
+
+# plot3(TMat, yMat, A_full,'b')
+# xlabel('Time [min]'); 
+# zlabel('Concentration [nM]');
+# view(0,100);
+# set(gca, 'XDir','reverse')
+
+# grid;
+
+# pos = (0 : size-1)*h;
+# hm = HeatMap(CELLS, 'RowLabels', pos, 'ColumnLabels', pos);
+# addXLabel(hm, '\mu m');
+# addYLabel(hm, '\mu m');
+# hold off
+
 
 
 if __name__ == "__main__":
