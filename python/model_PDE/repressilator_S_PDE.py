@@ -75,7 +75,7 @@ cell_idx = np.argwhere(nums==1)
 cell_matrix_idx = np.argwhere(CELLS==1)
 
 
-# TODO !!! (matlab code)
+# TODO: convert from matlab code below
 # cell_idx = ceil(size^2 * rand(1, n_cells));
 # CELLS = zeros(size,size);
 # CELLS(cell_idx) = 1;
@@ -99,8 +99,54 @@ A_series[0] = A[first_matrix_idx[0], first_matrix_idx[1]]
 S_e_series[0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
 A_full[0,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
 
+# TODO: convert from matlab code below
+# if (load_conf)
+#     cc = load('final_state');
+#     %cc = load('end_conf.mat');
+#     %a = cc.a;
+#     %i = cc.i;
+# end;
 
+# TODO: convert from matlab code below
+# if movie_on == 1
+#     % Setup image
+#     ih=imagesc(S_e); set(ih,'cdatamapping','direct')
+#     %colormap(jet); 
+#     axis image off; th=title('');
+#     set(gcf,'position',[100 200 768 768],'color',[1 1 1],'menubar','none')
+#
+#     % Create 'Quit' pushbutton in figure window
+#     uicontrol('units','normal','position',[.45 .02 .13 .07], ...
+#         'callback','set(gcf,''userdata'',1)',...
+#         'fontsize',10,'string','Quit');
+#     max_val = 0.1;
+#     min_val = 0;
+# end; 
 
+t = 0
+k = 0
+step = 0
+while t <= t_end:
+    print(t)
+    if periodic_bounds:
+        S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
+        S_e_yy = D1 * (np.roll(S_e, 1, axis=0) + np.roll(S_e, -1, axis=0) - 2 * S_e) / h2                
+    else:
+        # Create padded matrix to incorporate Neumann boundary conditions
+
+        onlyZero = np.matrix(0)
+        rowBefore = np.concatenate((onlyZero, S_e[1,:], onlyZero), axis=1)
+        rowAfter =  np.concatenate((onlyZero, S_e[-2,:], onlyZero), axis=1)
+        
+        columnBefore = S_e[:,1]
+        columnAfter = S_e[:, -2]
+        between = np.concatenate((columnBefore, S_e, columnAfter), axis=1)
+
+        SS_e = np.concatenate((rowBefore, between, rowAfter), axis=0)
+
+        # Calculate diffusion part of the equations
+        # S_e_xx
+        # S_e_yy
 
 
 if __name__ == "__main__":
