@@ -92,9 +92,9 @@ for (x,y) in cell_matrix_idx:
     C[x, y] = 100*np.random.rand()
     mC[x, y] = 100*np.random.rand()
 
-A_series = np.zeros((1, int(t_end/dt)))
-S_e_series = np.zeros((1, int(t_end/dt)))
-A_full = np.zeros((int(t_end/dt), n_cells))
+A_series = np.zeros((1, int(t_end/dt)+1))
+S_e_series = np.zeros((1, int(t_end/dt+1)))
+A_full = np.zeros((int(t_end/dt)+1, n_cells))
 
 A_series[0,0] = A[first_matrix_idx[0], first_matrix_idx[1]]
 S_e_series[0,0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
@@ -130,8 +130,8 @@ t = 0
 k = 0
 step = 0
 while t <= t_end:
-    print("t:", t)
-    print("step:", step)
+    # print("t:", t)
+    # print("step:", step)
 
     if periodic_bounds:
         S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
@@ -217,7 +217,7 @@ while t <= t_end:
     # end;
 
 
-    print()
+    # print()
 
 # SAVE CONF
 # TODO: convert from matlab code below
