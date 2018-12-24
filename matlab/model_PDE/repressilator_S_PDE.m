@@ -59,9 +59,9 @@ end;
 
 cell_idx = sort(cell_idx);
 
-%cell_idx = ceil(size^2 * rand(1, n_cells));
-%CELLS = zeros(size,size);
-%CELLS(cell_idx) = 1;
+cell_idx = ceil(size^2 * rand(1, n_cells));
+CELLS = zeros(size,size);
+CELLS(cell_idx) = 1;
 
 first_idx = cell_idx(1);
 
