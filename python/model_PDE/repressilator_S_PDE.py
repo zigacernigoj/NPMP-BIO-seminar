@@ -2,6 +2,7 @@ from parameters import Parameters
 from repressilator_s_ODE import repressilator_S_ODE
 import math
 import numpy as np
+import matplotlib.pyplot as plt
 
 # ali rob predstavlja konec prostora ali so meje neskončne?
 periodic_bounds = 1
@@ -244,6 +245,11 @@ while t <= t_end:
 # GRAPHS
 # TODO: convert from matlab code below
 # T=0:dt:t_end-dt;
+
+T = np.arange(0, t_end-dt, dt)    
+
+print(T)
+
 # % figure(1)
 # % plot(T, S_e_series, 'red')
 # % hold on
@@ -260,18 +266,20 @@ while t <= t_end:
 # % legend('A','S_e')
 # % hold off
 
-# figure(3)
-# TT = T.';
-# TMat = repmat(TT,1,n_cells);
-# y = 1:n_cells;
-# yMat = repmat(y, numel(TT), 1); %//For plot3
 
-# plot3(TMat, yMat, A_full,'b')
-# xlabel('Time [min]'); 
-# zlabel('Concentration [nM]');
+TT = T.transpose()
+TMat = np.repeat(TT, 1, n_cells)
+y = np.arange(0,n_cells)
+
+yMat = np.repeat(y, TT.size(), 1)
+plt.plot(TMat, yMat, A_full, 'b')
+plt.xlabel('Time [min]')
+plt.ylabel('Concentration [nM]')
 # view(0,100);
 # set(gca, 'XDir','reverse')
 
+
+plt.show()
 # grid;
 
 # pos = (0 : size-1)*h;
