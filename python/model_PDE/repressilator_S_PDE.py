@@ -2,7 +2,12 @@ from parameters import Parameters
 from repressilator_s_ODE import repressilator_S_ODE
 import math
 import numpy as np
+import scipy
 import matplotlib.pyplot as plt
+import time
+
+
+start_time = time.time()
 
 # ali rob predstavlja konec prostora ali so meje neskončne?
 periodic_bounds = 1
@@ -242,13 +247,16 @@ while t <= t_end:
 # end;
 
 
+print("--- %s seconds ---" % (time.time() - start_time))
+
+
 # GRAPHS
 # TODO: convert from matlab code below
 # T=0:dt:t_end-dt;
 
-T = np.arange(0, t_end-dt, dt)    
+T = np.arange(0, t_end-dt, dt)[np.newaxis]
 
-print(T)
+print("t shape", T.shape)
 
 # % figure(1)
 # % plot(T, S_e_series, 'red')
@@ -267,11 +275,26 @@ print(T)
 # % hold off
 
 
-TT = T.transpose()
-TMat = np.repeat(TT, 1, n_cells)
-y = np.arange(0,n_cells)
+TT = T.T
+print("tt shape", TT.shape)
+print("tt size", TT.size)
 
-yMat = np.repeat(y, TT.size(), 1)
+TMat = np.repeat(TT, n_cells, 1)
+print("tmat shape", TMat.shape)
+
+
+y = np.arange(0, n_cells)[np.newaxis]
+print("y shape", y.shape)
+
+yT = y.T
+print("yT shape", yT.shape)
+
+yMat = np.repeat(yT, TT.size, 1)
+print("ymat shape", yMat.shape)
+
+yMat = yMat.T
+
+
 plt.plot(TMat, yMat, A_full, 'b')
 plt.xlabel('Time [min]')
 plt.ylabel('Concentration [nM]')
