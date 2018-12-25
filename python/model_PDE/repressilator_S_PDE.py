@@ -6,7 +6,6 @@ import scipy
 import matplotlib.pyplot as plt
 import time
 
-
 start_time = time.time()
 
 # ali rob predstavlja konec prostora ali so meje neskončne?
