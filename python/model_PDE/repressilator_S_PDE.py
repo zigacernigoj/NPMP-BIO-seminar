@@ -3,7 +3,10 @@ from repressilator_s_ODE import repressilator_S_ODE
 import math
 import numpy as np
 import scipy
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
 import time
 
 start_time = time.time()
@@ -97,9 +100,9 @@ for (x,y) in cell_matrix_idx:
     C[x, y] = 100*np.random.rand()
     mC[x, y] = 100*np.random.rand()
 
-A_series = np.zeros((1, int(t_end/dt)+1))
-S_e_series = np.zeros((1, int(t_end/dt+1)))
-A_full = np.zeros((int(t_end/dt)+1, n_cells))
+A_series = np.zeros((1, int(t_end/dt)))
+S_e_series = np.zeros((1, int(t_end/dt)))
+A_full = np.zeros((int(t_end/dt), n_cells))
 
 A_series[0,0] = A[first_matrix_idx[0], first_matrix_idx[1]]
 S_e_series[0,0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
@@ -134,7 +137,7 @@ A_full[0,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
 t = 0
 k = 0
 step = 0
-while t <= t_end:
+while t < t_end:
     # print("t:", t)
     # print("step:", step)
 
@@ -179,7 +182,7 @@ while t <= t_end:
          
         dS_e[0, 0:width-1] = 0
         dS_e[width-1, 0:width-1] = 0
-         
+
 
     mA = mA + np.multiply(dt, dmA)
     mB = mB + np.multiply(dt, dmB)
@@ -190,12 +193,14 @@ while t <= t_end:
     S_i = S_i + np.multiply(dt, dS_i)
     S_e = S_e + np.multiply(dt, dS_e)
 
-    t += dt
-    step += 1
-
     A_series[0, step] = A[first_matrix_idx[0], first_matrix_idx[1]]
     S_e_series[0, step] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
     A_full[step,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
+
+    # increments AFTER ... see if it actually works
+    t += dt
+    step += 1
+
 
     # RECORD THE ACTION
     # TODO: convert from matlab code below
@@ -253,7 +258,7 @@ print("--- %s seconds ---" % (time.time() - start_time))
 # TODO: convert from matlab code below
 # T=0:dt:t_end-dt;
 
-T = np.arange(0, t_end-dt, dt)[np.newaxis]
+T = np.arange(0, t_end, dt)[np.newaxis]
 
 print("t shape", T.shape)
 
@@ -294,21 +299,42 @@ print("ymat shape", yMat.shape)
 yMat = yMat.T
 
 
-plt.plot(TMat, yMat, A_full, 'b')
-plt.xlabel('Time [min]')
-plt.ylabel('Concentration [nM]')
-# view(0,100);
-# set(gca, 'XDir','reverse')
+# WORKS
+# plt.plot(TMat, yMat, A_full, 'b')
+# plt.xlabel('Time [min]')
+# plt.ylabel('Concentration [nM]')
+# plt.show()
+
+# fig = plt.figure()
+# ax = fig.gca(projection='3d')
+# ax.plot(TMat, yMat, A_full)
+
+# 2D
+# plt.imshow(A_full, aspect='auto')
 
 
+# x = range(10000)
+# y = range(80)
+#
+# data = np.random.random((10000, 80))
+#
+# hf = plt.figure()
+# ha = hf.add_subplot(111, projection='3d')
+#
+# X, Y = np.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
+# ha.plot_surface(X, Y, data)
+
+
+# razporeditev celic
+plt.figure(4)
+plt.imshow(CELLS, cmap='binary')
+plt.xlabel(r'$\mu m$')
+plt.xticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
+plt.ylabel(r'$\mu m$')
+plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
+
+# za vse plote prikazat
 plt.show()
-# grid;
-
-# pos = (0 : size-1)*h;
-# hm = HeatMap(CELLS, 'RowLabels', pos, 'ColumnLabels', pos);
-# addXLabel(hm, '\mu m');
-# addYLabel(hm, '\mu m');
-# hold off
 
 
 
