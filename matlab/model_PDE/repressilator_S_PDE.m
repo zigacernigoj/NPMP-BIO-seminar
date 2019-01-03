@@ -154,6 +154,8 @@ while t <= t_end
 	t = t + dt;
 	step = step + 1;
     
+    
+    
     A_series(step) = A(first_idx);
     S_e_series(step) = S_e(first_idx);
     A_full(step,:) = A(cell_idx);
