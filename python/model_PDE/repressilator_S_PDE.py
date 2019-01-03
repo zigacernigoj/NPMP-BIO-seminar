@@ -260,24 +260,17 @@ print("--- %s seconds ---" % (time.time() - start_time))
 
 T = np.arange(0, t_end, dt)[np.newaxis]
 
-print("t shape", T.shape)
+# doesn't show data
+# plt.figure(1)
+# plt.plot(T, S_e_series)
+# plt.xlabel('Time [min]')
+# plt.ylabel('Concentration [nM]')
 
-# % figure(1)
-# % plot(T, S_e_series, 'red')
-# % hold on
-# % xlabel('Time [min]')
-# % ylabel('Concentration [nM]')
-# % legend('S_e')
-# % hold off
-# % 
-# % figure(2)
-# % plot(T,A_series, T, S_e_series)
-# % hold on
-# % xlabel('Time [min]')
-# % ylabel('Concentration [nM]')
-# % legend('A','S_e')
-# % hold off
-
+# doesn't show data
+# plt.figure(2)
+# plt.plot(T,A_series, T, S_e_series)
+# plt.xlabel('Time [min]')
+# plt.ylabel('Concentration [nM]')
 
 TT = T.T
 TMat = np.repeat(TT, n_cells, 1)
@@ -289,9 +282,8 @@ yMat = yMat.T
 
 # graf prikazuje koncentracijo molekule v celicah skozi cas
 fig, ax1 = plt.subplots(subplot_kw={'projection': '3d'})
-ax1.plot_wireframe(TMat, yMat, A_full, rstride=10, cstride=0)
+ax1.plot_wireframe(TMat, yMat, A_full)
 ax1.set_title("concentration in cells through time")
-
 
 # graf prikazuje razporeditev celic
 plt.figure(4)
