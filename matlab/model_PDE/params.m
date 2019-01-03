@@ -27,7 +27,7 @@ density = 0.8;
 
 
 % simulation parameters 
-t_end = 10000;
+t_end = 9999;
 dt = 0.1;
 h=0.5; % Grid size: in micro meters - E coli size 1 um x 2 um (volume = 1 um^3)
 h2=h^2;
