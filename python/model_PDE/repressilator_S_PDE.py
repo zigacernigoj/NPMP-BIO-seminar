@@ -280,52 +280,20 @@ print("t shape", T.shape)
 
 
 TT = T.T
-print("tt shape", TT.shape)
-print("tt size", TT.size)
-
 TMat = np.repeat(TT, n_cells, 1)
-print("tmat shape", TMat.shape)
-
 
 y = np.arange(0, n_cells)[np.newaxis]
-print("y shape", y.shape)
-
 yT = y.T
-print("yT shape", yT.shape)
-
 yMat = np.repeat(yT, TT.size, 1)
-print("ymat shape", yMat.shape)
-
 yMat = yMat.T
 
-
-# WORKS
-# plt.plot(TMat, yMat, A_full, 'b')
-# plt.xlabel('Time [min]')
-# plt.ylabel('Concentration [nM]')
-# plt.show()
-
-# fig = plt.figure()
-# ax = fig.gca(projection='3d')
-# ax.plot(TMat, yMat, A_full)
-
-# 2D
-# plt.imshow(A_full, aspect='auto')
+# graf prikazuje koncentracijo molekule v celicah skozi cas
+fig, ax1 = plt.subplots(subplot_kw={'projection': '3d'})
+ax1.plot_wireframe(TMat, yMat, A_full, rstride=10, cstride=0)
+ax1.set_title("concentration in cells through time")
 
 
-# x = range(10000)
-# y = range(80)
-#
-# data = np.random.random((10000, 80))
-#
-# hf = plt.figure()
-# ha = hf.add_subplot(111, projection='3d')
-#
-# X, Y = np.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
-# ha.plot_surface(X, Y, data)
-
-
-# razporeditev celic
+# graf prikazuje razporeditev celic
 plt.figure(4)
 plt.imshow(CELLS, cmap='binary')
 plt.xlabel(r'$\mu m$')
