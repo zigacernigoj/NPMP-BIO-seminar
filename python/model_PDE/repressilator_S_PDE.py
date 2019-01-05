@@ -1,5 +1,5 @@
 from parameters import Parameters
-from repressilator_s_ODE import repressilator_S_ODE
+#from repressilator_s_ODE import repressilator_S_ODE
 import math
 import numpy as np
 import scipy
@@ -7,7 +7,39 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+from multiprocessing import Pool
+
 import time
+
+
+def calcDm(args):
+    A, mA, cells, alpha, alpha0, Kd, delta_m, n, plus = args
+    return np.multiply(cells, (
+            np.true_divide(alpha, (1 + np.power((np.true_divide(A, Kd)), n))) + alpha0 - delta_m * mA + plus))
+
+
+def calcD(args):
+    A, mA, beta, delta_p = args
+    return np.multiply(CELLS, (beta * mA - delta_p * A))
+
+
+def repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1,
+                        kSe, kappa, eta, process_pool):
+    dS_i = np.multiply(CELLS, (- kS0 * S_i + kS1 * A - eta * (S_i - S_e)))
+    dS_e = - kSe * S_e + np.multiply(CELLS, (eta * (S_i - S_e)))
+
+    dm_results = process_pool.map_async(calcDm, [(C, mA, CELLS, alpha, alpha0, Kd, delta_m, n, 0),
+                                                 (A, mB, CELLS, alpha, alpha0, Kd, delta_m, n, 0),
+                                                 (B, mC, CELLS, alpha, alpha0, Kd, delta_m, n, np.true_divide((kappa * S_i), (1 + S_i)))])
+
+    [d1, d2, d3] = process_pool.map(calcD, [(A, mA, beta, delta_p),
+                                                (B, mB, beta, delta_p),
+                                                (C, mC, beta, delta_p)])
+
+    [dm1, dm2, dm3] = dm_results.get()
+
+    return [dm1, dm2, dm3, d1, d2, d3, dS_i, dS_e]
+
 
 start_time = time.time()
 
@@ -137,21 +169,37 @@ A_full[0,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
 t = 0
 k = 0
 step = 0
+
+# timing sums
+integr_time_sum = 0
+mul_time_sum = 0
+setup_time_sum = 0
+other_time_sum = 0
+
+# extract as a constant
+onlyZero = np.matrix(0)
+D1_div_h2 = D1 / h2
+
+process_pool = Pool(10)
+
 while t < t_end:
     # print("t:", t)
     # print("step:", step)
 
     if periodic_bounds:
-        S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
-        S_e_yy = D1 * (np.roll(S_e, 1, axis=0) + np.roll(S_e, -1, axis=0) - 2 * S_e) / h2                
+        setup_start = time.time()
+
+        S_e_xx = (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) * D1_div_h2
+        S_e_yy = (np.roll(S_e, 1, axis=0) + np.roll(S_e, -1, axis=0) - 2 * S_e) * D1_div_h2
+
+        setup_time_sum += time.time() - setup_start
     else:
         # Create padded matrix to incorporate Neumann boundary conditions
 
-        onlyZero = np.matrix(0)
-        rowBefore = np.concatenate((onlyZero, S_e[1,:], onlyZero), axis=1)
-        rowAfter =  np.concatenate((onlyZero, S_e[-2,:], onlyZero), axis=1)
+        rowBefore = np.concatenate((onlyZero, S_e[1, :], onlyZero), axis=1)
+        rowAfter =  np.concatenate((onlyZero, S_e[-2, :], onlyZero), axis=1)
         
-        columnBefore = S_e[:,1]
+        columnBefore = S_e[:, 1]
         columnAfter = S_e[:, -2]
         between = np.concatenate((columnBefore, S_e, columnAfter), axis=1)
 
@@ -167,11 +215,12 @@ while t < t_end:
         downPart = SS_e[2:, 1:-1]
         S_e_yy = D1 * (upPart + downPart - 2 * S_e) / h2
 
-
     D2S_e = S_e_xx + S_e_yy
 
+    integr_start = time.time()
     # Calculate dx/dt
-    [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
+    [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta, process_pool)
+    integr_time_sum += time.time() - integr_start
     
     dS_e = dS_e + D2S_e
 
@@ -183,7 +232,7 @@ while t < t_end:
         dS_e[0, 0:width-1] = 0
         dS_e[width-1, 0:width-1] = 0
 
-
+    mul_start = time.time()
     mA = mA + np.multiply(dt, dmA)
     mB = mB + np.multiply(dt, dmB)
     mC = mC + np.multiply(dt, dmC)
@@ -192,10 +241,13 @@ while t < t_end:
     C = C + np.multiply(dt, dC)
     S_i = S_i + np.multiply(dt, dS_i)
     S_e = S_e + np.multiply(dt, dS_e)
+    mul_time_sum += time.time() - mul_start
 
+    other_start = time.time()
     A_series[0, step] = A[first_matrix_idx[0], first_matrix_idx[1]]
     S_e_series[0, step] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
     A_full[step,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
+    other_time_sum += time.time() - other_start
 
     # increments AFTER ... see if it actually works
     t += dt
@@ -252,6 +304,10 @@ while t < t_end:
 
 
 print("--- %s seconds ---" % (time.time() - start_time))
+print("--- %s seconds for setup ---" % setup_time_sum)
+print("--- %s seconds for integration ---" % integr_time_sum)
+print("--- %s seconds for other ---" % other_time_sum)
+print("--- %s seconds for mul ---" % mul_time_sum)
 
 
 # GRAPHS
