@@ -137,9 +137,17 @@ A_full[0,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
 t = 0
 k = 0
 step = 0
+
+setup_time_sum = 0
+integr_time_sum = 0
+mul_time_sum = 0
+other_time_sum = 0
+
 while t < t_end:
     # print("t:", t)
     # print("step:", step)
+
+    setup_start = time.time()
 
     if periodic_bounds:
         S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
@@ -167,12 +175,16 @@ while t < t_end:
         downPart = SS_e[2:, 1:-1]
         S_e_yy = D1 * (upPart + downPart - 2 * S_e) / h2
 
+    setup_time_sum += time.time() - setup_start
 
     D2S_e = S_e_xx + S_e_yy
 
     # Calculate dx/dt
+    integr_start = time.time()
     [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
-    
+    integr_time_sum += time.time() - integr_start
+
+    other_start = time.time()
     dS_e = dS_e + D2S_e
 
     if borderfixed == 1:
@@ -182,8 +194,9 @@ while t < t_end:
          
         dS_e[0, 0:width-1] = 0
         dS_e[width-1, 0:width-1] = 0
+    other_time_sum += time.time() - other_start
 
-
+    mul_start = time.time()
     mA = mA + np.multiply(dt, dmA)
     mB = mB + np.multiply(dt, dmB)
     mC = mC + np.multiply(dt, dmC)
@@ -192,7 +205,9 @@ while t < t_end:
     C = C + np.multiply(dt, dC)
     S_i = S_i + np.multiply(dt, dS_i)
     S_e = S_e + np.multiply(dt, dS_e)
+    mul_time_sum += time.time() - mul_start
 
+    other_start = time.time()
     A_series[0, step] = A[first_matrix_idx[0], first_matrix_idx[1]]
     S_e_series[0, step] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
     A_full[step,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
@@ -200,7 +215,7 @@ while t < t_end:
     # increments AFTER ... see if it actually works
     t += dt
     step += 1
-
+    other_time_sum += time.time() - other_start
 
     # RECORD THE ACTION
     # TODO: convert from matlab code below
@@ -252,6 +267,10 @@ while t < t_end:
 
 
 print("--- %s seconds ---" % (time.time() - start_time))
+print("--- %s seconds for setup ---" % setup_time_sum)
+print("--- %s seconds for integration ---" % integr_time_sum)
+print("--- %s seconds for mul ---" % mul_time_sum)
+print("--- %s seconds for other ---" % other_time_sum)
 
 
 # GRAPHS
