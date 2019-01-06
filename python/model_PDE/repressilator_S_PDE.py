@@ -161,48 +161,49 @@ while t < t_end:
     # print("t:", t)
     # print("step:", step)
 
-    if periodic_bounds:
-        S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
-        S_e_yy = D1 * (np.roll(S_e, 1, axis=0) + np.roll(S_e, -1, axis=0) - 2 * S_e) / h2                
-    else:
-        # Create padded matrix to incorporate Neumann boundary conditions
+    # if periodic_bounds:
 
-        onlyZero = np.matrix(0)
-        rowBefore = np.concatenate((onlyZero, S_e[1,:], onlyZero), axis=1)
-        rowAfter =  np.concatenate((onlyZero, S_e[-2,:], onlyZero), axis=1)
-        
-        columnBefore = S_e[:,1]
-        columnAfter = S_e[:, -2]
-        between = np.concatenate((columnBefore, S_e, columnAfter), axis=1)
+    S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
+    S_e_yy = D1 * (np.roll(S_e, 1, axis=0) + np.roll(S_e, -1, axis=0) - 2 * S_e) / h2
 
-        SS_e = np.concatenate((rowBefore, between, rowAfter), axis=0)
-
-        # Calculate diffusion part of the equations
-
-        leftPart = SS_e[1:-1, 0:-2]
-        rightPart = SS_e[1:-1, 2:]
-        S_e_xx = D1 * (leftPart + rightPart - 2 * S_e) / h2
-
-        upPart = SS_e[0:-2, 1:-1]
-        downPart = SS_e[2:, 1:-1]
-        S_e_yy = D1 * (upPart + downPart - 2 * S_e) / h2
-
+    # else:
+    #     # Create padded matrix to incorporate Neumann boundary conditions
+    #
+    #     onlyZero = np.matrix(0)
+    #     rowBefore = np.concatenate((onlyZero, S_e[1,:], onlyZero), axis=1)
+    #     rowAfter =  np.concatenate((onlyZero, S_e[-2,:], onlyZero), axis=1)
+    #
+    #     columnBefore = S_e[:,1]
+    #     columnAfter = S_e[:, -2]
+    #     between = np.concatenate((columnBefore, S_e, columnAfter), axis=1)
+    #
+    #     SS_e = np.concatenate((rowBefore, between, rowAfter), axis=0)
+    #
+    #     # Calculate diffusion part of the equations
+    #
+    #     leftPart = SS_e[1:-1, 0:-2]
+    #     rightPart = SS_e[1:-1, 2:]
+    #     S_e_xx = D1 * (leftPart + rightPart - 2 * S_e) / h2
+    #
+    #     upPart = SS_e[0:-2, 1:-1]
+    #     downPart = SS_e[2:, 1:-1]
+    #     S_e_yy = D1 * (upPart + downPart - 2 * S_e) / h2
+    #
 
     D2S_e = S_e_xx + S_e_yy
 
     # Calculate dx/dt
     [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
-    
+
     dS_e = dS_e + D2S_e
 
-    if borderfixed == 1:
-        width = len(dS_e)
-        dS_e[0:width-1, 0] = 0
-        dS_e[0:width-1, width-1] = 0
-         
-        dS_e[0, 0:width-1] = 0
-        dS_e[width-1, 0:width-1] = 0
-
+    # if borderfixed == 1:
+    #     width = len(dS_e)
+    #     dS_e[0:width-1, 0] = 0
+    #     dS_e[0:width-1, width-1] = 0
+    #
+    #     dS_e[0, 0:width-1] = 0
+    #     dS_e[width-1, 0:width-1] = 0
 
     mA = mA + np.multiply(dt, dmA)
     mB = mB + np.multiply(dt, dmB)
