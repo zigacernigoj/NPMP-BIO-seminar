@@ -24,6 +24,33 @@ movie_on = 0
 
 # nalaganje vrednosti parametrov
 p = params = Parameters()
+
+# #### fiksirani parametri #### #
+# velikost stranice kvadrata, ki predstavlja svet
+size = p.size
+
+# gostota "zivih" celic
+density = p.density
+
+# number of cells to be added to CELLS matrix
+n_cells = math.ceil(density * size**2)
+
+# diffusion rate (hitrost sirjenja)
+D1 = p.D1
+
+# # environment # #
+# stevilo casovnih ciklov
+t_end = p.t_end
+
+# velikost casovnega cikla
+dt = p.dt
+
+# Grid size: in micro meters - E coli size 1 um x 2 um (volume = 1 um^3)
+h = p.h
+h2 = p.h2
+# ######## #
+
+# #### te parametre je treba pogruntat z optimizac. algoritmi #### #
 alpha = p.alpha
 alpha0 = p.alpha0
 Kd = p.Kd
@@ -35,18 +62,11 @@ kappa = p.kappa
 kS0 = p.kS0
 kS1 = p.kS1
 kSe = p.kSe
-D1 = p.D1
 eta = p.eta
+# ######## #
 
-size = p.size                               
-density = p.density
-# number of cells to be added to CELLS matrix
-n_cells = math.ceil(density * size**2)
 
-t_end = p.t_end
-dt = p.dt
-h = p.h 
-h2 = p.h2
+##### matrike in ostale spremenljivke za delovanje modela #####
 
 # S=zeros(size,size) #Initialise species S
 S_e = np.random.rand(size,size)
