@@ -37,7 +37,7 @@ def shift_down(arr):
     return result
 
 
-def simulate():
+def simulate(showPlots = False):
 
     start_time = time.time()
 
@@ -188,14 +188,14 @@ def simulate():
         other_time_sum += time.time() - other_start
 
         mul_start = time.time()
-        mA = mA + np.multiply(dt, dmA)
-        mB = mB + np.multiply(dt, dmB)
-        mC = mC + np.multiply(dt, dmC)
-        A = A + np.multiply(dt, dA)
-        B = B + np.multiply(dt, dB)
-        C = C + np.multiply(dt, dC)
-        S_i = S_i + np.multiply(dt, dS_i)
-        S_e = S_e + np.multiply(dt, dS_e)
+        mA = mA + (dt * dmA)
+        mB = mB + (dt * dmB)
+        mC = mC + (dt * dmC)
+        A = A + (dt * dA)
+        B = B + (dt * dB)
+        C = C + (dt * dC)
+        S_i = S_i + (dt * dS_i)
+        S_e = S_e + (dt * dS_e)
         mul_time_sum += time.time() - mul_start
 
         other_start = time.time()
@@ -218,45 +218,50 @@ def simulate():
 
     # GRAPHS
 
-    T = np.arange(0, t_end, dt)[np.newaxis]
+    if showPlots:
+        print("preparing plots")
 
-    # doesn't show data
-    # plt.figure(1)
-    # plt.plot(T, S_e_series)
-    # plt.xlabel('Time [min]')
-    # plt.ylabel('Concentration [nM]')
+        T = np.arange(0, t_end, dt)[np.newaxis]
 
-    # doesn't show data
-    # plt.figure(2)
-    # plt.plot(T,A_series, T, S_e_series)
-    # plt.xlabel('Time [min]')
-    # plt.ylabel('Concentration [nM]')
+        # doesn't show data
+        # plt.figure(1)
+        # plt.plot(T, S_e_series)
+        # plt.xlabel('Time [min]')
+        # plt.ylabel('Concentration [nM]')
 
-    TT = T.T
-    TMat = np.repeat(TT, n_cells, 1)
+        # doesn't show data
+        # plt.figure(2)
+        # plt.plot(T,A_series, T, S_e_series)
+        # plt.xlabel('Time [min]')
+        # plt.ylabel('Concentration [nM]')
 
-    y = np.arange(0, n_cells)[np.newaxis]
-    yT = y.T
-    yMat = np.repeat(yT, TT.size, 1)
-    yMat = yMat.T
+        TT = T.T
+        TMat = np.repeat(TT, n_cells, 1)
 
-    # graf prikazuje koncentracijo molekule v celicah skozi cas
-    fig, ax1 = plt.subplots(subplot_kw={'projection': '3d'})
-    ax1.plot_wireframe(TMat, yMat, A_full)
-    ax1.set_title("concentration in cells through time")
+        y = np.arange(0, n_cells)[np.newaxis]
+        yT = y.T
+        yMat = np.repeat(yT, TT.size, 1)
+        yMat = yMat.T
 
-    # graf prikazuje razporeditev celic
-    plt.figure(4)
-    plt.imshow(CELLS, cmap='binary')
-    plt.xlabel(r'$\mu m$')
-    plt.xticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
-    plt.ylabel(r'$\mu m$')
-    plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
+        # graf prikazuje koncentracijo molekule v celicah skozi cas
+        fig, ax1 = plt.subplots(subplot_kw={'projection': '3d'})
+        ax1.plot_wireframe(TMat, yMat, A_full)
+        ax1.set_title("concentration in cells through time")
 
-    # za vse plote prikazat
-    plt.show()
+        # graf prikazuje razporeditev celic
+        plt.figure(4)
+        plt.imshow(CELLS, cmap='binary')
+        plt.xlabel(r'$\mu m$')
+        plt.xticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
+        plt.ylabel(r'$\mu m$')
+        plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
+
+        # za vse plote prikazat
+        plt.show()
 
 
 if __name__ == "__main__":
     print("starting simulation")
-    simulate()
+    showPlots = True
+    simulate(showPlots)
+    print("simulation ended")
