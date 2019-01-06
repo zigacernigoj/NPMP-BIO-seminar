@@ -12,15 +12,15 @@ import time
 start_time = time.time()
 
 # ali rob predstavlja konec prostora ali so meje neskončne?
-periodic_bounds = 1
+# periodic_bounds = 1
 # nalaganje shranjene konfiguracije?
-load_conf = 0
+# load_conf = 0
 # shranjevanje končne konfiguracije?
-save_conf = 0
+# save_conf = 0
 # fiksni robovi ali spremenljivi
-borderfixed = 0
+# borderfixed = 0
 # snemanje videa - časovno potratno
-movie_on = 0
+# movie_on = 0
 
 # nalaganje vrednosti parametrov
 p = params = Parameters()
@@ -96,10 +96,10 @@ np.random.shuffle(nums)
 CELLS = np.reshape(nums, (size, size))
 
 # locations of cells in 1D array 
-cell_idx = np.argwhere(nums==1)
+cell_idx = np.argwhere(nums == 1)
 
 # locations of cells in 2D matrix, already sorted
-cell_matrix_idx = np.argwhere(CELLS==1)
+cell_matrix_idx = np.argwhere(CELLS == 1)
 
 first_idx = cell_idx[0]
 first_matrix_idx = cell_matrix_idx[0]
@@ -116,18 +116,11 @@ A_series = np.zeros((1, int(t_end/dt)))
 S_e_series = np.zeros((1, int(t_end/dt)))
 A_full = np.zeros((int(t_end/dt), n_cells))
 
-A_series[0,0] = A[first_matrix_idx[0], first_matrix_idx[1]]
-S_e_series[0,0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
-A_full[0,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
+A_series[0, 0] = A[first_matrix_idx[0], first_matrix_idx[1]]
+S_e_series[0, 0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
+A_full[0, :] = A[cell_matrix_idx[:, 0], cell_matrix_idx[:, 1]]
 
-# LOAD CONF
-# TODO: convert from matlab code below
-# if (load_conf)
-#     cc = load('final_state');
-#     %cc = load('end_conf.mat');
-#     %a = cc.a;
-#     %i = cc.i;
-# end;
+# TODO: LOAD CONFIGURATION
 
 t = 0
 k = 0
@@ -163,17 +156,11 @@ while t < t_end:
     t += dt
     step += 1
 
-# SAVE CONF
-# TODO: convert from matlab code below
-# if (save_conf)
-#     save('final_state.mat','A');
-# end
+# TODO: SAVE CONFIGURATION
 
 print("--- %s seconds ---" % (time.time() - start_time))
 
 # GRAPHS
-# TODO: convert from matlab code below
-# T=0:dt:t_end-dt;
 
 T = np.arange(0, t_end, dt)[np.newaxis]
 
