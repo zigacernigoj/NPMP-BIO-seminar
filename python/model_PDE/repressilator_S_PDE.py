@@ -137,8 +137,22 @@ while t < t_end:
 
     setup_start = time.time()
 
-    S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
-    S_e_yy = D1 * (np.roll(S_e, 1, axis=0) + np.roll(S_e, -1, axis=0) - 2 * S_e) / h2
+    first_col = S_e[:, 0][np.newaxis].T
+    after_cols = S_e[:, 1:]
+
+    last_col = S_e[:, -1][np.newaxis].T
+    before_cols = S_e[:, :-1]
+
+    first_row = S_e[0, :][np.newaxis]
+    after_rows = S_e[1:, :]
+
+    last_row = S_e[-1, :][np.newaxis]
+    before_rows = S_e[:-1, :]
+
+    two_times_Se = 2 * S_e
+
+    S_e_xx = D1 * (np.append(last_col, before_cols, axis=1) + np.append(after_cols, first_col, axis=1) - two_times_Se) / h2
+    S_e_yy = D1 * (np.append(last_row, before_rows, axis=0) + np.append(after_rows, first_row, axis=0) - two_times_Se) / h2
 
     setup_time_sum += time.time() - setup_start
 
