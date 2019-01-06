@@ -12,18 +12,45 @@ import time
 start_time = time.time()
 
 # ali rob predstavlja konec prostora ali so meje neskončne?
-periodic_bounds = 1
+# periodic_bounds = 1
 # nalaganje shranjene konfiguracije?
-load_conf = 0
+# load_conf = 0
 # shranjevanje končne konfiguracije?
-save_conf = 0
+# save_conf = 0
 # fiksni robovi ali spremenljivi
-borderfixed = 0
+# borderfixed = 0
 # snemanje videa - časovno potratno
-movie_on = 0
+# movie_on = 0
 
 # nalaganje vrednosti parametrov
 p = params = Parameters()
+
+# #### fiksirani parametri #### #
+# velikost stranice kvadrata, ki predstavlja svet
+size = p.size
+
+# gostota "zivih" celic
+density = p.density
+
+# number of cells to be added to CELLS matrix
+n_cells = math.ceil(density * size**2)
+
+# diffusion rate (hitrost sirjenja)
+D1 = p.D1
+
+# # environment # #
+# stevilo casovnih ciklov
+t_end = p.t_end
+
+# velikost casovnega cikla
+dt = p.dt
+
+# Grid size: in micro meters - E coli size 1 um x 2 um (volume = 1 um^3)
+h = p.h
+h2 = p.h2
+# ######## #
+
+# #### te parametre je treba pogruntat z optimizac. algoritmi #### #
 alpha = p.alpha
 alpha0 = p.alpha0
 Kd = p.Kd
@@ -35,18 +62,10 @@ kappa = p.kappa
 kS0 = p.kS0
 kS1 = p.kS1
 kSe = p.kSe
-D1 = p.D1
 eta = p.eta
+# ######## #
 
-size = p.size                               
-density = p.density
-# number of cells to be added to CELLS matrix
-n_cells = math.ceil(density * size**2)
-
-t_end = p.t_end
-dt = p.dt
-h = p.h 
-h2 = p.h2
+# #### matrike in ostale spremenljivke za delovanje modela #### #
 
 # S=zeros(size,size) #Initialise species S
 S_e = np.random.rand(size,size)
@@ -57,7 +76,6 @@ C = np.zeros((size,size))
 mA = np.zeros((size,size))
 mB = np.zeros((size,size))
 mC = np.zeros((size,size))
-
 
 # this creates a matrix (CELLS) with randomly located cells
 # number of cells = n_cells
@@ -78,21 +96,15 @@ np.random.shuffle(nums)
 CELLS = np.reshape(nums, (size, size))
 
 # locations of cells in 1D array 
-cell_idx = np.argwhere(nums==1)
+cell_idx = np.argwhere(nums == 1)
 
 # locations of cells in 2D matrix, already sorted
-cell_matrix_idx = np.argwhere(CELLS==1)
-
-# I DON'T KNOW
-# TODO: convert from matlab code below
-# cell_idx = ceil(size^2 * rand(1, n_cells));
-# CELLS = zeros(size,size);
-# CELLS(cell_idx) = 1;
+cell_matrix_idx = np.argwhere(CELLS == 1)
 
 first_idx = cell_idx[0]
 first_matrix_idx = cell_matrix_idx[0]
 
-for (x,y) in cell_matrix_idx:
+for (x, y) in cell_matrix_idx:
     A[x, y] = 100*np.random.rand()
     mA[x, y] = 100*np.random.rand()
     B[x, y] = 100*np.random.rand()
@@ -104,35 +116,11 @@ A_series = np.zeros((1, int(t_end/dt)))
 S_e_series = np.zeros((1, int(t_end/dt)))
 A_full = np.zeros((int(t_end/dt), n_cells))
 
-A_series[0,0] = A[first_matrix_idx[0], first_matrix_idx[1]]
-S_e_series[0,0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
-A_full[0,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
+A_series[0, 0] = A[first_matrix_idx[0], first_matrix_idx[1]]
+S_e_series[0, 0] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
+A_full[0, :] = A[cell_matrix_idx[:, 0], cell_matrix_idx[:, 1]]
 
-# LOAD CONF
-# TODO: convert from matlab code below
-# if (load_conf)
-#     cc = load('final_state');
-#     %cc = load('end_conf.mat');
-#     %a = cc.a;
-#     %i = cc.i;
-# end;
-
-# RECORD THE ACTION
-# TODO: convert from matlab code below
-# if movie_on == 1
-#     % Setup image
-#     ih=imagesc(S_e); set(ih,'cdatamapping','direct')
-#     %colormap(jet); 
-#     axis image off; th=title('');
-#     set(gcf,'position',[100 200 768 768],'color',[1 1 1],'menubar','none')
-#
-#     % Create 'Quit' pushbutton in figure window
-#     uicontrol('units','normal','position',[.45 .02 .13 .07], ...
-#         'callback','set(gcf,''userdata'',1)',...
-#         'fontsize',10,'string','Quit');
-#     max_val = 0.1;
-#     min_val = 0;
-# end; 
+# TODO: LOAD CONFIGURATION
 
 t = 0
 k = 0
@@ -149,31 +137,8 @@ while t < t_end:
 
     setup_start = time.time()
 
-    if periodic_bounds:
-        S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
-        S_e_yy = D1 * (np.roll(S_e, 1, axis=0) + np.roll(S_e, -1, axis=0) - 2 * S_e) / h2                
-    else:
-        # Create padded matrix to incorporate Neumann boundary conditions
-
-        onlyZero = np.matrix(0)
-        rowBefore = np.concatenate((onlyZero, S_e[1,:], onlyZero), axis=1)
-        rowAfter =  np.concatenate((onlyZero, S_e[-2,:], onlyZero), axis=1)
-        
-        columnBefore = S_e[:,1]
-        columnAfter = S_e[:, -2]
-        between = np.concatenate((columnBefore, S_e, columnAfter), axis=1)
-
-        SS_e = np.concatenate((rowBefore, between, rowAfter), axis=0)
-
-        # Calculate diffusion part of the equations
-
-        leftPart = SS_e[1:-1, 0:-2]
-        rightPart = SS_e[1:-1, 2:]
-        S_e_xx = D1 * (leftPart + rightPart - 2 * S_e) / h2
-
-        upPart = SS_e[0:-2, 1:-1]
-        downPart = SS_e[2:, 1:-1]
-        S_e_yy = D1 * (upPart + downPart - 2 * S_e) / h2
+    S_e_xx = D1 * (np.roll(S_e, 1, axis=1) + np.roll(S_e, -1, axis=1) - 2 * S_e) / h2
+    S_e_yy = D1 * (np.roll(S_e, 1, axis=0) + np.roll(S_e, -1, axis=0) - 2 * S_e) / h2
 
     setup_time_sum += time.time() - setup_start
 
@@ -186,14 +151,6 @@ while t < t_end:
 
     other_start = time.time()
     dS_e = dS_e + D2S_e
-
-    if borderfixed == 1:
-        width = len(dS_e)
-        dS_e[0:width-1, 0] = 0
-        dS_e[0:width-1, width-1] = 0
-         
-        dS_e[0, 0:width-1] = 0
-        dS_e[width-1, 0:width-1] = 0
     other_time_sum += time.time() - other_start
 
     mul_start = time.time()
@@ -217,54 +174,7 @@ while t < t_end:
     step += 1
     other_time_sum += time.time() - other_start
 
-    # RECORD THE ACTION
-    # TODO: convert from matlab code below
-    # if movie_on == 1
-    #     obs = S_e;
-    #   
-    #     % Map v to image grayscale value
-    #     m = 1+round(62*(obs - min_val)/max_val); m=max(m,1); m=min(m,63);
-    #     %m=1+round(63*v); m=max(m,1); m=min(m,64);
-    #
-    #      % Update image and text 
-    #     set(ih,'cdata',m);
-    #     set(th,'string',sprintf('%d  %0.2f   %0.2f',t,obs(first_idx)))
-    #     drawnow
-    #
-    #     % Write every 500th frame to movie 
-    #     %if rem(n,500)==1
-    #     if rem(step,100)==1
-    #         k=k+1;
-    #         mov(k)=getframe;
-    #     end
-    #
-    # 	if ~isempty(get(gcf,'userdata')), break; end % Quit if user clicks on 'Quit' button.
-    # end;
-
-
-    # print()
-
-# SAVE CONF
-# TODO: convert from matlab code below
-# if (save_conf)
-#     save('final_state.mat','A');
-# end
-
-# RECORD THE ACTION
-# TODO: convert from matlab code below
-# if movie_on == 1
-#     %Write movie as AVI
-#     if isunix, sep='/'; else sep='\'; end
-#     [fn,pn]=uiputfile([pwd sep 'mov.avi'],'Save movie as:');
-#     if ischar(fn)
-#         movie2avi(mov,[pn fn],'quality',75)
-#     else
-#         disp('User pressed cancel')
-#     end
-#
-#     close(gcf)
-# end;
-
+# TODO: SAVE CONFIGURATION
 
 print("--- %s seconds ---" % (time.time() - start_time))
 print("--- %s seconds for setup ---" % setup_time_sum)
@@ -272,10 +182,7 @@ print("--- %s seconds for integration ---" % integr_time_sum)
 print("--- %s seconds for mul ---" % mul_time_sum)
 print("--- %s seconds for other ---" % other_time_sum)
 
-
 # GRAPHS
-# TODO: convert from matlab code below
-# T=0:dt:t_end-dt;
 
 T = np.arange(0, t_end, dt)[np.newaxis]
 
@@ -314,8 +221,6 @@ plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
 
 # za vse plote prikazat
 plt.show()
-
-
 
 if __name__ == "__main__":
     # params = Parameters()
