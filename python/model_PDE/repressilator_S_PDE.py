@@ -116,8 +116,8 @@ def simulate(showPlots = False):
     # indices of cells are in cell_idx (1D)
     # and cell_matrix_idx (2D)
 
-    # flattened 10*10 matrix = array with 100 elements
-    nums = np.zeros(100)
+    # flattened size*size matrix = array with size**2 elements
+    nums = np.zeros(size**2)
 
     # some places contain cells (number of cells = n_cells)
     nums[:n_cells] = 1
@@ -262,6 +262,6 @@ def simulate(showPlots = False):
 
 if __name__ == "__main__":
     print("starting simulation")
-    showPlots = True
+    showPlots = False
     simulate(showPlots)
     print("simulation ended")
