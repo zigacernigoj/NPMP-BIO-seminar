@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
 
+from repressilator_s_ode_obj import Repressilator
+
 
 def shift_right(arr):
     result = np.empty_like(arr)
@@ -167,6 +169,8 @@ def simulate(showPlots = False):
     mul_time_sum = 0
     other_time_sum = 0
 
+    r = Repressilator(CELLS, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
+
     while t < t_end:
         # print("t:", t)
         # print("step:", step)
@@ -183,7 +187,7 @@ def simulate(showPlots = False):
 
         # Calculate dx/dt
         integr_start = time.time()
-        [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
+        [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = r.s_ode(mA, mB, mC, A, B, C, S_i, S_e)
         integr_time_sum += time.time() - integr_start
 
         other_start = time.time()
