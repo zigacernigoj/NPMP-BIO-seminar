@@ -159,6 +159,9 @@ def simulate(showPlots = False):
     k = 0
     step = 0
 
+    # constants
+    D1_div_h2 = D1 / h2
+
     setup_time_sum = 0
     integr_time_sum = 0
     mul_time_sum = 0
@@ -171,8 +174,8 @@ def simulate(showPlots = False):
         setup_start = time.time()
 
         two_times_Se = 2 * S_e
-        S_e_xx = D1 * (shift_right(S_e) + shift_left(S_e) - two_times_Se) / h2
-        S_e_yy = D1 * (shift_down(S_e) + shift_up(S_e) - two_times_Se) / h2
+        S_e_xx = (shift_right(S_e) + shift_left(S_e) - two_times_Se) * D1_div_h2
+        S_e_yy = (shift_down(S_e) + shift_up(S_e) - two_times_Se) * D1_div_h2
 
         setup_time_sum += time.time() - setup_start
 
