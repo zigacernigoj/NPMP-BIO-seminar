@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
 
+from repressilator_s_ode_obj import Repressilator
+
 
 def shift_right(arr):
     result = np.empty_like(arr)
@@ -159,10 +161,15 @@ def simulate(showPlots = False):
     k = 0
     step = 0
 
+    # constants
+    D1_div_h2 = D1 / h2
+
     setup_time_sum = 0
     integr_time_sum = 0
     mul_time_sum = 0
     other_time_sum = 0
+
+    r = Repressilator(CELLS, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
 
     while t < t_end:
         # print("t:", t)
@@ -171,8 +178,8 @@ def simulate(showPlots = False):
         setup_start = time.time()
 
         two_times_Se = 2 * S_e
-        S_e_xx = D1 * (shift_right(S_e) + shift_left(S_e) - two_times_Se) / h2
-        S_e_yy = D1 * (shift_down(S_e) + shift_up(S_e) - two_times_Se) / h2
+        S_e_xx = (shift_right(S_e) + shift_left(S_e) - two_times_Se) * D1_div_h2
+        S_e_yy = (shift_down(S_e) + shift_up(S_e) - two_times_Se) * D1_div_h2
 
         setup_time_sum += time.time() - setup_start
 
@@ -180,7 +187,7 @@ def simulate(showPlots = False):
 
         # Calculate dx/dt
         integr_start = time.time()
-        [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
+        [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = r.s_ode(mA, mB, mC, A, B, C, S_i, S_e)
         integr_time_sum += time.time() - integr_start
 
         other_start = time.time()

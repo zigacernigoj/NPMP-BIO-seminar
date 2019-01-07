@@ -15,7 +15,7 @@ def repressilator_S_ODE(CELLS, mA, mB, mC, A, B, C, S_i, S_e, alpha, alpha0, Kd,
                     np.true_divide(alpha, (1 + np.power((np.true_divide(A, Kd)), n))) + alpha0 - delta_m * mA + plus))
 
     def calcD(A, mA):
-        return (CELLS * (beta * mA - delta_p * A))
+        return CELLS * (beta * mA - delta_p * A)
 
     # rewrite from matlab file
     # print("repressilator_S_ODE")
