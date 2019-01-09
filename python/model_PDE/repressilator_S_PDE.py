@@ -1,5 +1,4 @@
 from parameters import Parameters
-from repressilator_s_ODE import repressilator_S_ODE
 import math
 import numpy as np
 import scipy
@@ -7,6 +6,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
+
+import os
+from multiprocessing import Process
 
 from repressilator_s_ode_obj import Repressilator
 
@@ -41,7 +43,7 @@ def shift_down(arr):
 
 def simulate(showPlots = False):
 
-    start_time = time.time()
+    print('starting process with PID {}'.format(os.getpid()))
 
     # fix random seed for testing purposes
     # np.random.seed(1)
@@ -171,6 +173,8 @@ def simulate(showPlots = False):
 
     r = Repressilator(CELLS, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
 
+    start_time = time.time()
+
     while t < t_end:
         # print("t:", t)
         # print("step:", step)
@@ -222,6 +226,7 @@ def simulate(showPlots = False):
     print("--- %s seconds for integration ---" % integr_time_sum)
     print("--- %s seconds for mul ---" % mul_time_sum)
     print("--- %s seconds for other ---" % other_time_sum)
+    print()
 
     # GRAPHS
 
@@ -268,7 +273,16 @@ def simulate(showPlots = False):
 
 
 if __name__ == "__main__":
-    print("starting simulation")
+    num_of_processes = 4
+    print("starting {} simulations".format(num_of_processes))
     showPlots = False
-    simulate(showPlots)
+    processes = [Process(target=simulate, args=(showPlots, )) for _ in range(num_of_processes)]
+
+    for p in processes:
+        p.start()
+        time.sleep(1)
+
+    for p in processes:
+        p.join()
+
     print("simulation ended")
