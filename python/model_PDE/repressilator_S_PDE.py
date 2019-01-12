@@ -1,5 +1,4 @@
 from parameters import Parameters
-from repressilator_s_ODE import repressilator_S_ODE
 import math
 import numpy as np
 import scipy
@@ -8,35 +7,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
 
-from repressilator_s_ode_obj import Repressilator
-
-
-def shift_right(arr):
-    result = np.empty_like(arr)
-    result[:, 1:] = arr[:, :-1]
-    result[:, 0] = arr[:, -1]
-    return result
-
-
-def shift_left(arr):
-    result = np.empty_like(arr)
-    result[:, :-1] = arr[:, 1:]
-    result[:, -1] = arr[:, 0]
-    return result
-
-
-def shift_up(arr):
-    result = np.empty_like(arr)
-    result[:-1, :] = arr[1:, :]
-    result[-1, :] = arr[0, :]
-    return result
-
-
-def shift_down(arr):
-    result = np.empty_like(arr)
-    result[1:, :] = arr[:-1, :]
-    result[0, :] = arr[-1, :]
-    return result
+from ode_funs import dmAdt, dmBdt, dmCdt, dAdt, dBdt, dCdt, dS_idt, dS_edt
+from scipy.integrate import odeint
 
 
 def simulate(showPlots = False):
@@ -169,51 +141,26 @@ def simulate(showPlots = False):
     mul_time_sum = 0
     other_time_sum = 0
 
-    r = Repressilator(CELLS, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
+    t = np.linspace(0, t_end, t_end/dt)
+    print(t)
 
-    while t < t_end:
-        # print("t:", t)
-        # print("step:", step)
+    print(CELLS.flatten().shape, mA.flatten().shape, A.flatten().shape)
 
-        setup_start = time.time()
+    # funkcije za klic v scipy ... ODE
+    dmA = odeint(dmAdt, mA.flatten(), t, args=(CELLS.flatten(), alpha, C.flatten(), Kd, n, alpha0, delta_m))
+    dmB = odeint(dmBdt, mB.flatten(), t, args=(CELLS.flatten(), alpha, A.flatten(), Kd, n, alpha0, delta_m))
+    dmC = odeint(dmCdt, mC.flatten(), t, args=(CELLS.flatten(), alpha, B.flatten(), Kd, n, alpha0, delta_m, kappa, S_i.flatten()))
 
-        two_times_Se = 2 * S_e
-        S_e_xx = (shift_right(S_e) + shift_left(S_e) - two_times_Se) * D1_div_h2
-        S_e_yy = (shift_down(S_e) + shift_up(S_e) - two_times_Se) * D1_div_h2
+    dA = odeint(dAdt, A.flatten(), t, args=(CELLS.flatten(), beta, mA.flatten(), delta_p))
+    dB = odeint(dBdt, B.flatten(), t, args=(CELLS.flatten(), beta, mB.flatten(), delta_p))
+    dC = odeint(dCdt, C.flatten(), t, args=(CELLS.flatten(), beta, mC.flatten(), delta_p))
 
-        setup_time_sum += time.time() - setup_start
+    dS_i = odeint(dS_idt, S_i.flatten(), t, args=(CELLS.flatten(), kS0, kS1, A.flatten(), eta, S_e.flatten()))
 
-        D2S_e = S_e_xx + S_e_yy
+    dS_e = odeint(dS_edt, S_e.flatten(), t, args=(kSe, CELLS.flatten(), eta, S_i.flatten(), D1_div_h2))
 
-        # Calculate dx/dt
-        integr_start = time.time()
-        [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = r.s_ode(mA, mB, mC, A, B, C, S_i, S_e)
-        integr_time_sum += time.time() - integr_start
 
-        other_start = time.time()
-        dS_e = dS_e + D2S_e
-        other_time_sum += time.time() - other_start
 
-        mul_start = time.time()
-        mA = mA + (dt * dmA)
-        mB = mB + (dt * dmB)
-        mC = mC + (dt * dmC)
-        A = A + (dt * dA)
-        B = B + (dt * dB)
-        C = C + (dt * dC)
-        S_i = S_i + (dt * dS_i)
-        S_e = S_e + (dt * dS_e)
-        mul_time_sum += time.time() - mul_start
-
-        other_start = time.time()
-        A_series[0, step] = A[first_matrix_idx[0], first_matrix_idx[1]]
-        S_e_series[0, step] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
-        A_full[step,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
-
-        # increments AFTER ... see if it actually works
-        t += dt
-        step += 1
-        other_time_sum += time.time() - other_start
 
     # TODO: SAVE CONFIGURATION
 
