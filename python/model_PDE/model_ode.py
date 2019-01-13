@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def shift_right(arr):
     result = np.empty_like(arr)
     result[:, 1:] = arr[:, :-1]
@@ -30,7 +31,7 @@ def shift_down(arr):
 
 class Repressilator:
     def __init__(self, cells, alpha, alpha0, kd, beta, delta_m, delta_p, n, k_s0, k_s1, k_se, kappa, eta, D1_div_h2):
-        self.cells = cells
+        self.cells = cells.flatten()
         self.alpha = alpha
         self.alpha0 = alpha0
         self.kd = kd
@@ -45,7 +46,25 @@ class Repressilator:
         self.eta = eta
         self.D1_div_h2 = D1_div_h2
 
-    def s_ode(self, mA, mB, mC, A, B, C, S_i, S_e):
+
+    def rep_ode(self, all_stuff, t):
+
+        # vrstni red
+        # mA, mB, mC, A, B, C, S_i, S_e
+
+        split_stuff = np.split(all_stuff, 8)
+        mA = split_stuff[0]
+        mB = split_stuff[1]
+        mC = split_stuff[2]
+        A = split_stuff[3]
+        B = split_stuff[4]
+        C = split_stuff[5]
+        S_i = split_stuff[6]
+        S_e = split_stuff[7]
+
+        S_e_matrix = S_e.reshape((10,10)) # make it not fixed
+
+
         def calcDm(A, mA, plus=0):
             return (self.cells * (
                     np.true_divide(self.alpha, (1 + np.power((np.true_divide(A, self.kd)), self.n))) + self.alpha0 - self.delta_m * mA + plus))
@@ -53,18 +72,27 @@ class Repressilator:
         def calcD(A, mA):
             return self.cells * (self.beta * mA - self.delta_p * A)
 
-
-        two_times_Se = 2 * S_e
-        S_e_xx = (shift_right(S_e) + shift_left(S_e) - two_times_Se) * self.D1_div_h2
-        S_e_yy = (shift_down(S_e) + shift_up(S_e) - two_times_Se) * self.D1_div_h2
-
+        two_times_Se = 2 * S_e_matrix
+        S_e_xx = (shift_right(S_e_matrix) + shift_left(S_e_matrix) - two_times_Se) * self.D1_div_h2
+        S_e_yy = (shift_down(S_e_matrix) + shift_up(S_e_matrix) - two_times_Se) * self.D1_div_h2
 
         D2S_e = S_e_xx + S_e_yy
 
         dS_i = (self.cells * (- self.k_s0 * S_i + self.k_s1 * A - self.eta * (S_i - S_e)))
         dS_e = - self.k_se * S_e + (self.cells * (self.eta * (S_i - S_e)))
 
-        dS_e = dS_e + D2S_e
+        dS_e = dS_e + D2S_e.flatten()
 
-        return [calcDm(C, mA), calcDm(A, mB), calcDm(B, mC, np.true_divide((self.kappa * S_i), (1 + S_i))),
-                calcD(A, mA), calcD(B, mB), calcD(C, mC), dS_i, dS_e]
+
+
+        dmA = calcDm(C, mA)#.flatten()
+        dmB = calcDm(A, mB)#.flatten()
+        dmC = calcDm(B, mC, np.true_divide((self.kappa * S_i), (1 + S_i)))#.flatten()
+        dA = calcD(A, mA)#.flatten()
+        dB = calcD(B, mB)#.flatten()
+        dC = calcD(C, mC)#.flatten()
+        dS_i = dS_i#.flatten()
+        dS_e = dS_e#.flatten()
+
+
+        return np.concatenate((dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e))

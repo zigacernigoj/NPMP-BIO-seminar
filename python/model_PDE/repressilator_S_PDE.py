@@ -11,34 +11,6 @@ import time
 from repressilator_s_ode_obj import Repressilator
 
 
-def shift_right(arr):
-    result = np.empty_like(arr)
-    result[:, 1:] = arr[:, :-1]
-    result[:, 0] = arr[:, -1]
-    return result
-
-
-def shift_left(arr):
-    result = np.empty_like(arr)
-    result[:, :-1] = arr[:, 1:]
-    result[:, -1] = arr[:, 0]
-    return result
-
-
-def shift_up(arr):
-    result = np.empty_like(arr)
-    result[:-1, :] = arr[1:, :]
-    result[-1, :] = arr[0, :]
-    return result
-
-
-def shift_down(arr):
-    result = np.empty_like(arr)
-    result[1:, :] = arr[:-1, :]
-    result[0, :] = arr[-1, :]
-    return result
-
-
 def simulate(showPlots = False):
 
     start_time = time.time()
@@ -169,30 +141,17 @@ def simulate(showPlots = False):
     mul_time_sum = 0
     other_time_sum = 0
 
-    r = Repressilator(CELLS, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
+    r = Repressilator(CELLS, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta, D1_div_h2)
 
     while t < t_end:
         # print("t:", t)
         # print("step:", step)
-
-        setup_start = time.time()
-
-        two_times_Se = 2 * S_e
-        S_e_xx = (shift_right(S_e) + shift_left(S_e) - two_times_Se) * D1_div_h2
-        S_e_yy = (shift_down(S_e) + shift_up(S_e) - two_times_Se) * D1_div_h2
-
-        setup_time_sum += time.time() - setup_start
-
-        D2S_e = S_e_xx + S_e_yy
 
         # Calculate dx/dt
         integr_start = time.time()
         [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = r.s_ode(mA, mB, mC, A, B, C, S_i, S_e)
         integr_time_sum += time.time() - integr_start
 
-        other_start = time.time()
-        dS_e = dS_e + D2S_e
-        other_time_sum += time.time() - other_start
 
         mul_start = time.time()
         mA = mA + (dt * dmA)
@@ -238,7 +197,7 @@ def simulate(showPlots = False):
 
         # doesn't show data
         # plt.figure(2)
-        # plt.plot(T,A_series, T, S_e_series)
+        # plt.plot(T,A_series,'r-',label='k(t)') #, T, S_e_series)
         # plt.xlabel('Time [min]')
         # plt.ylabel('Concentration [nM]')
 
@@ -263,12 +222,18 @@ def simulate(showPlots = False):
         plt.ylabel(r'$\mu m$')
         plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
 
+
+        plt.figure(5)
+        plt.plot(TT, A_full)
+        plt.xlabel('time')
+        plt.ylabel('z(t)')
+
         # za vse plote prikazat
         plt.show()
 
 
 if __name__ == "__main__":
     print("starting simulation")
-    showPlots = False
+    showPlots = True
     simulate(showPlots)
     print("simulation ended")
