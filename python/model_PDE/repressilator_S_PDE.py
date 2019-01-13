@@ -247,6 +247,12 @@ def simulate(inputs):
         # za vse plote prikazat
         plt.show()
 
+    if first_synced_index < math.inf:
+        name = './reports/' + str(os.getpid()) + '_' + str(time.time()) + 'score_' + str(first_synced_index) + '.txt'
+        with open(name, 'w') as file:
+            string = '\n'.join(str(e) for e in inputs)
+            file.write(string + '\n-----\n' + str(first_synced_index))
+
     print('ending process with PID {}\n'.format(os.getpid()))
 
     # return first synced index so you know in scipy.optimize.anneal what is better
