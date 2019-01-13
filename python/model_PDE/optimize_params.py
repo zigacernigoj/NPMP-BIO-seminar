@@ -1,6 +1,6 @@
 import numpy as np
 import time
-
+import math
 
 def get_sync_index(A_full, treshold, num_of_elements):
 
@@ -17,10 +17,19 @@ def get_sync_index(A_full, treshold, num_of_elements):
     # print("is lower", A_lower)
     # print("synced", synced[0][0])
 
-    print("--- %s seconds for get sync ---" % (time.time() - start_time_getsync))
+    # print("--- %s seconds for get sync ---" % (time.time() - start_time_getsync))
 
-    return synced[0][0]
+    if len(synced) > 0:
+        sync_index = synced[0][0]
+        min_for_cell = np.min(A_full[sync_index:, 0])
+        max_for_cell = np.max(A_full[sync_index:, 0])
 
+        if (max_for_cell - min_for_cell) < 5:
+            return math.inf
+        else:
+            return synced[0][0]
+    else:
+        return math.inf
 
 
 # def getT(A_lower, num_of_elements):

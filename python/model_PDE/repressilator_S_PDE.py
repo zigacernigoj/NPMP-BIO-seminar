@@ -6,6 +6,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
+from scipy.optimize import rosen, differential_evolution
 
 import os
 from multiprocessing import Process
@@ -14,7 +15,7 @@ from repressilator_s_ode_obj import Repressilator
 from optimize_params import get_sync_index
 
 
-def simulate(showPlots = False):
+def simulate(inputs):
 
     print('starting process with PID {}'.format(os.getpid()))
 
@@ -61,18 +62,18 @@ def simulate(showPlots = False):
     # ######## #
 
     # #### te parametre je treba pogruntat z optimizac. algoritmi #### #
-    alpha = p.alpha
-    alpha0 = p.alpha0
-    Kd = p.Kd
-    delta_m = p.delta_m
-    delta_p = p.delta_p
-    n = p.n
-    beta = p.beta
-    kappa = p.kappa
-    kS0 = p.kS0
-    kS1 = p.kS1
-    kSe = p.kSe
-    eta = p.eta
+    alpha = inputs[0]
+    alpha0 = inputs[1]
+    Kd = inputs[2]
+    delta_m = inputs[3]
+    delta_p = inputs[4]
+    n = inputs[5]
+    beta = inputs[6]
+    kappa = inputs[7]
+    kS0 = inputs[8]
+    kS1 = inputs[9]
+    kSe = inputs[10]
+    eta = inputs[11]
     # ######## #
 
     # #### matrike in ostale spremenljivke za delovanje modela #### #
@@ -179,23 +180,28 @@ def simulate(showPlots = False):
 
     # TODO: SAVE CONFIGURATION
 
-    print("--- %s seconds ---" % (time.time() - start_time))
-    print("--- %s seconds for integration ---" % integr_time_sum)
-    print("--- %s seconds for mul ---" % mul_time_sum)
-    print("--- %s seconds for other ---" % other_time_sum)
-    print()
+    printTimes = False
+
+    if printTimes:
+        print("--- %s seconds ---" % (time.time() - start_time))
+        print("--- %s seconds for integration ---" % integr_time_sum)
+        print("--- %s seconds for mul ---" % mul_time_sum)
+        print("--- %s seconds for other ---" % other_time_sum)
+        print()
 
     print("racunam primernost parametrov")
+
     # tabela,
     # razlika med min in max,
     # stevilo zaporednih casovnih korakov, ki zadostujejo razliki med min in max
-    x = get_sync_index(A_full, 2, 3)
+    first_synced_index = get_sync_index(A_full, 2, 3)
 
-    print("first synced", x)
+    print("first synced", first_synced_index)
 
 
     # GRAPHS
-    if showPlots:
+    showPlots = True
+    if first_synced_index < math.inf:
         print("preparing plots")
 
         T = np.arange(0, t_end, dt)[np.newaxis]
@@ -221,17 +227,17 @@ def simulate(showPlots = False):
         yMat = yMat.T
 
         # graf prikazuje koncentracijo molekule v celicah skozi cas
-        fig, ax1 = plt.subplots(subplot_kw={'projection': '3d'})
-        ax1.plot_wireframe(TMat, yMat, A_full)
-        ax1.set_title("concentration in cells through time")
+        # fig, ax1 = plt.subplots(subplot_kw={'projection': '3d'})
+        # ax1.plot_wireframe(TMat, yMat, A_full)
+        # ax1.set_title("concentration in cells through time")
 
         # graf prikazuje razporeditev celic
-        plt.figure(4)
-        plt.imshow(CELLS, cmap='binary')
-        plt.xlabel(r'$\mu m$')
-        plt.xticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
-        plt.ylabel(r'$\mu m$')
-        plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
+        # plt.figure(4)
+        # plt.imshow(CELLS, cmap='binary')
+        # plt.xlabel(r'$\mu m$')
+        # plt.xticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
+        # plt.ylabel(r'$\mu m$')
+        # plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
 
         plt.figure(5)
         plt.plot(TT, A_full)
@@ -241,20 +247,42 @@ def simulate(showPlots = False):
         # za vse plote prikazat
         plt.show()
 
-    print('\nending process with PID {}\n\n'.format(os.getpid()))
+    print('ending process with PID {}\n'.format(os.getpid()))
+
+    # return first synced index so you know in scipy.optimize.anneal what is better
+    return first_synced_index
 
 
 if __name__ == "__main__":
-    num_of_processes = 4
-    print("starting {} simulations".format(num_of_processes))
-    showPlots = False
-    processes = [Process(target=simulate, args=(showPlots, )) for _ in range(num_of_processes)]
+    # num_of_processes = 4
+    # print("starting {} simulations".format(num_of_processes))
+    # showPlots = False
+    # processes = [Process(target=simulate, args=(showPlots, )) for _ in range(num_of_processes)]
+    #
+    # for p in processes:
+    #     p.start()
+    #     time.sleep(1)
+    #
+    # for p in processes:
+    #     p.join()
 
-    for p in processes:
-        p.start()
-        time.sleep(1)
+    print("starting simulation with differential_evolution")
 
-    for p in processes:
-        p.join()
+    _alpha = (0.001, 10)
+    _alpha0 = (0.001, 10)
+    _Kd = (0.01, 100)
+    _delta_m = (0.001, 10)
+    _delta_p = (0.001, 10)
+    _n = (1, 4)
+    _beta = (0.001, 10)
+    _kappa = (0.001, 10)
+    _kS0 = (0.001, 10)
+    _kS1 = (0.001, 10)
+    _kSe = (0.01, 0.01) # (0.001, 10) # problems - overflow
+    _eta = (2, 2) # (0.01, 100) # problems - overflow
+
+    bounds = [_alpha, _alpha0, _Kd, _delta_m, _delta_p, _n, _beta, _kappa, _kS0, _kS1, _kSe, _eta]
+
+    result = differential_evolution(simulate, bounds, updating='deferred', workers=4)
 
     print("simulation ended")
