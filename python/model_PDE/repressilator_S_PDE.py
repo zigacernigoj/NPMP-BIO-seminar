@@ -22,15 +22,15 @@ def simulate(inputs):
     # fix random seed for testing purposes
     # np.random.seed(1)
 
-    # ali rob predstavlja konec prostora ali so meje neskončne?
+    # ali rob predstavlja konec prostora ali so meje neskoncne?
     # periodic_bounds = 1
     # nalaganje shranjene konfiguracije?
     # load_conf = 0
-    # shranjevanje končne konfiguracije?
+    # shranjevanje koncne konfiguracije?
     # save_conf = 0
     # fiksni robovi ali spremenljivi
     # borderfixed = 0
-    # snemanje videa - časovno potratno
+    # snemanje videa - casovno potratno
     # movie_on = 0
 
     # nalaganje vrednosti parametrov
@@ -200,8 +200,8 @@ def simulate(inputs):
 
 
     # GRAPHS
-    showPlots = True
-    if first_synced_index < math.inf:
+    showPlots = False
+    if (first_synced_index < math.inf) and showPlots:
         print("preparing plots")
 
         T = np.arange(0, t_end, dt)[np.newaxis]
@@ -268,21 +268,40 @@ if __name__ == "__main__":
 
     print("starting simulation with differential_evolution")
 
-    _alpha = (0.001, 10)
-    _alpha0 = (0.001, 10)
-    _Kd = (0.01, 100)
-    _delta_m = (0.001, 10)
-    _delta_p = (0.001, 10)
-    _n = (1, 4)
-    _beta = (0.001, 10)
-    _kappa = (0.001, 10)
-    _kS0 = (0.001, 10)
-    _kS1 = (0.001, 10)
-    _kSe = (0.01, 0.01) # (0.001, 10) # problems - overflow
-    _eta = (2, 2) # (0.01, 100) # problems - overflow
+    b_alpha = (0.001, 10)
+    b_alpha0 = (0.001, 10)
+    b_Kd = (0.01, 100)
+    b_delta_m = (0.001, 10)
+    b_delta_p = (0.001, 10)
+    b_n = (1, 4)
+    b_beta = (0.001, 10)
+    b_kappa = (0.001, 10)
+    b_kS0 = (0.001, 10)
+    b_kS1 = (0.001, 10)
+    b_kSe = (0.001, 10) # problems - overflow
+    b_eta = (0.01, 100) # problems - overflow
 
-    bounds = [_alpha, _alpha0, _Kd, _delta_m, _delta_p, _n, _beta, _kappa, _kS0, _kS1, _kSe, _eta]
+    bounds = [b_alpha, b_alpha0, b_Kd, b_delta_m, b_delta_p, b_n, b_beta, b_kappa, b_kS0, b_kS1, b_kSe, b_eta]
 
-    result = differential_evolution(simulate, bounds, updating='deferred', workers=4)
+    alpha = 5
+    alpha0 = 0.001 * alpha
+    Kd = 10
+    delta_m = 0.1
+    delta_p = 0.1
+    n = 2
+    beta = 1
+    kappa = 0.2
+    kS0 = 1
+    kS1 = 0.01
+    kSe = 0.01
+    eta = 2
+
+    init = [[alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta],
+            [alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta],
+            [alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta],
+            [alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta],
+            [alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta]]
+
+    result = differential_evolution(simulate, bounds, init=init, updating='deferred', workers=4, strategy='currenttobest1bin')
 
     print("simulation ended")
