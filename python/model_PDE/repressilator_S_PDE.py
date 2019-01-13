@@ -11,34 +11,7 @@ import os
 from multiprocessing import Process
 
 from repressilator_s_ode_obj import Repressilator
-
-
-def shift_right(arr):
-    result = np.empty_like(arr)
-    result[:, 1:] = arr[:, :-1]
-    result[:, 0] = arr[:, -1]
-    return result
-
-
-def shift_left(arr):
-    result = np.empty_like(arr)
-    result[:, :-1] = arr[:, 1:]
-    result[:, -1] = arr[:, 0]
-    return result
-
-
-def shift_up(arr):
-    result = np.empty_like(arr)
-    result[:-1, :] = arr[1:, :]
-    result[-1, :] = arr[0, :]
-    return result
-
-
-def shift_down(arr):
-    result = np.empty_like(arr)
-    result[1:, :] = arr[:-1, :]
-    result[0, :] = arr[-1, :]
-    return result
+from optimize_params import get_sync_index
 
 
 def simulate(showPlots = False):
@@ -212,8 +185,16 @@ def simulate(showPlots = False):
     print("--- %s seconds for other ---" % other_time_sum)
     print()
 
-    # GRAPHS
+    print("racunam primernost parametrov")
+    # tabela,
+    # razlika med min in max,
+    # stevilo zaporednih casovnih korakov, ki zadostujejo razliki med min in max
+    x = get_sync_index(A_full, 2, 3)
 
+    print("first synced", x)
+
+
+    # GRAPHS
     if showPlots:
         print("preparing plots")
 
@@ -260,11 +241,13 @@ def simulate(showPlots = False):
         # za vse plote prikazat
         plt.show()
 
+    print('\nending process with PID {}\n\n'.format(os.getpid()))
+
 
 if __name__ == "__main__":
     num_of_processes = 4
     print("starting {} simulations".format(num_of_processes))
-    showPlots = True
+    showPlots = False
     processes = [Process(target=simulate, args=(showPlots, )) for _ in range(num_of_processes)]
 
     for p in processes:
