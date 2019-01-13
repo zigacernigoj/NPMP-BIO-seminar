@@ -166,12 +166,11 @@ def simulate(showPlots = False):
     # constants
     D1_div_h2 = D1 / h2
 
-    setup_time_sum = 0
     integr_time_sum = 0
     mul_time_sum = 0
     other_time_sum = 0
 
-    r = Repressilator(CELLS, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta)
+    r = Repressilator(CELLS, alpha, alpha0, Kd, beta, delta_m, delta_p, n, kS0, kS1, kSe, kappa, eta, D1_div_h2)
 
     start_time = time.time()
 
@@ -179,24 +178,10 @@ def simulate(showPlots = False):
         # print("t:", t)
         # print("step:", step)
 
-        setup_start = time.time()
-
-        two_times_Se = 2 * S_e
-        S_e_xx = (shift_right(S_e) + shift_left(S_e) - two_times_Se) * D1_div_h2
-        S_e_yy = (shift_down(S_e) + shift_up(S_e) - two_times_Se) * D1_div_h2
-
-        setup_time_sum += time.time() - setup_start
-
-        D2S_e = S_e_xx + S_e_yy
-
         # Calculate dx/dt
         integr_start = time.time()
         [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = r.s_ode(mA, mB, mC, A, B, C, S_i, S_e)
         integr_time_sum += time.time() - integr_start
-
-        other_start = time.time()
-        dS_e = dS_e + D2S_e
-        other_time_sum += time.time() - other_start
 
         mul_start = time.time()
         mA = mA + (dt * dmA)
@@ -222,7 +207,6 @@ def simulate(showPlots = False):
     # TODO: SAVE CONFIGURATION
 
     print("--- %s seconds ---" % (time.time() - start_time))
-    print("--- %s seconds for setup ---" % setup_time_sum)
     print("--- %s seconds for integration ---" % integr_time_sum)
     print("--- %s seconds for mul ---" % mul_time_sum)
     print("--- %s seconds for other ---" % other_time_sum)
@@ -268,6 +252,11 @@ def simulate(showPlots = False):
         plt.ylabel(r'$\mu m$')
         plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
 
+        plt.figure(5)
+        plt.plot(TT, A_full)
+        plt.xlabel('time')
+        plt.ylabel('concentration')
+
         # za vse plote prikazat
         plt.show()
 
@@ -275,7 +264,7 @@ def simulate(showPlots = False):
 if __name__ == "__main__":
     num_of_processes = 4
     print("starting {} simulations".format(num_of_processes))
-    showPlots = False
+    showPlots = True
     processes = [Process(target=simulate, args=(showPlots, )) for _ in range(num_of_processes)]
 
     for p in processes:
