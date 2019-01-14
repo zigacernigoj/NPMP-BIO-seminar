@@ -247,7 +247,8 @@ def simulate(inputs):
         # za vse plote prikazat
         plt.show()
 
-    if first_synced_index < math.inf:
+    saveConfig = False
+    if (first_synced_index < math.inf) and saveConfig:
         name = './reports/' + str(os.getpid()) + '_' + str(time.time()) + 'score_' + str(first_synced_index) + '.txt'
         with open(name, 'w') as file:
             string = '\n'.join(str(e) for e in inputs)
@@ -308,6 +309,9 @@ if __name__ == "__main__":
             [alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta],
             [alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta]]
 
-    result = differential_evolution(simulate, bounds, init=init, updating='deferred', workers=4, strategy='currenttobest1bin')
+    result = differential_evolution(simulate, bounds, init=init, updating='deferred', workers=4, strategy='currenttobest1bin', maxiter=250)
 
+    print(result.x)
+    print(result.fun)
     print("simulation ended")
+
