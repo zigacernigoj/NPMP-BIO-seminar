@@ -6,7 +6,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
-from scipy.optimize import rosen, differential_evolution
+from scipy.optimize import differential_evolution, dual_annealing
 
 import os
 from multiprocessing import Process
@@ -148,116 +148,122 @@ def simulate(inputs):
 
     start_time = time.time()
 
-    while t < t_end:
-        # print("t:", t)
-        # print("step:", step)
+    try:
 
-        # Calculate dx/dt
-        integr_start = time.time()
-        [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = r.s_ode(mA, mB, mC, A, B, C, S_i, S_e)
-        integr_time_sum += time.time() - integr_start
+        while t < t_end:
+            # print("t:", t)
+            # print("step:", step)
 
-        mul_start = time.time()
-        mA = mA + (dt * dmA)
-        mB = mB + (dt * dmB)
-        mC = mC + (dt * dmC)
-        A = A + (dt * dA)
-        B = B + (dt * dB)
-        C = C + (dt * dC)
-        S_i = S_i + (dt * dS_i)
-        S_e = S_e + (dt * dS_e)
-        mul_time_sum += time.time() - mul_start
+            # Calculate dx/dt
+            integr_start = time.time()
+            with np.errstate(invalid='raise'):
+                [dmA, dmB, dmC, dA, dB, dC, dS_i, dS_e] = r.s_ode(mA, mB, mC, A, B, C, S_i, S_e)
+            integr_time_sum += time.time() - integr_start
 
-        other_start = time.time()
-        A_series[0, step] = A[first_matrix_idx[0], first_matrix_idx[1]]
-        S_e_series[0, step] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
-        A_full[step,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
+            mul_start = time.time()
+            mA = mA + (dt * dmA)
+            mB = mB + (dt * dmB)
+            mC = mC + (dt * dmC)
+            A = A + (dt * dA)
+            B = B + (dt * dB)
+            C = C + (dt * dC)
+            S_i = S_i + (dt * dS_i)
+            S_e = S_e + (dt * dS_e)
+            mul_time_sum += time.time() - mul_start
 
-        # increments AFTER ... see if it actually works
-        t += dt
-        step += 1
-        other_time_sum += time.time() - other_start
+            other_start = time.time()
+            A_series[0, step] = A[first_matrix_idx[0], first_matrix_idx[1]]
+            S_e_series[0, step] = S_e[first_matrix_idx[0], first_matrix_idx[1]]
+            A_full[step,:] = A[cell_matrix_idx[:,0], cell_matrix_idx[:,1]]
 
-    # TODO: SAVE CONFIGURATION
+            # increments AFTER ... see if it actually works
+            t += dt
+            step += 1
+            other_time_sum += time.time() - other_start
 
-    printTimes = False
+        # TODO: SAVE CONFIGURATION
 
-    if printTimes:
-        print("--- %s seconds ---" % (time.time() - start_time))
-        print("--- %s seconds for integration ---" % integr_time_sum)
-        print("--- %s seconds for mul ---" % mul_time_sum)
-        print("--- %s seconds for other ---" % other_time_sum)
-        print()
+        printTimes = False
 
-    print("racunam primernost parametrov")
+        if printTimes:
+            print("--- %s seconds ---" % (time.time() - start_time))
+            print("--- %s seconds for integration ---" % integr_time_sum)
+            print("--- %s seconds for mul ---" % mul_time_sum)
+            print("--- %s seconds for other ---" % other_time_sum)
+            print()
 
-    # tabela,
-    # razlika med min in max,
-    # stevilo zaporednih casovnih korakov, ki zadostujejo razliki med min in max
-    first_synced_index = get_sync_index(A_full, 2, 3)
+        print("racunam primernost parametrov")
 
-    print("first synced", first_synced_index)
+        # tabela,
+        # razlika med min in max,
+        # stevilo zaporednih casovnih korakov, ki zadostujejo razliki med min in max
+        first_synced_index = get_sync_index(A_full, 2, 3)
+
+        print("first synced", first_synced_index)
 
 
-    # GRAPHS
-    showPlots = False
-    if (first_synced_index < math.inf) and showPlots:
-        print("preparing plots")
+        # GRAPHS
+        showPlots = False
+        if (first_synced_index < math.inf) and showPlots:
+            print("preparing plots")
 
-        T = np.arange(0, t_end, dt)[np.newaxis]
+            T = np.arange(0, t_end, dt)[np.newaxis]
 
-        # doesn't show data
-        # plt.figure(1)
-        # plt.plot(T, S_e_series)
-        # plt.xlabel('Time [min]')
-        # plt.ylabel('Concentration [nM]')
+            # doesn't show data
+            # plt.figure(1)
+            # plt.plot(T, S_e_series)
+            # plt.xlabel('Time [min]')
+            # plt.ylabel('Concentration [nM]')
 
-        # doesn't show data
-        # plt.figure(2)
-        # plt.plot(T,A_series, T, S_e_series)
-        # plt.xlabel('Time [min]')
-        # plt.ylabel('Concentration [nM]')
+            # doesn't show data
+            # plt.figure(2)
+            # plt.plot(T,A_series, T, S_e_series)
+            # plt.xlabel('Time [min]')
+            # plt.ylabel('Concentration [nM]')
 
-        TT = T.T
-        TMat = np.repeat(TT, n_cells, 1)
+            TT = T.T
+            TMat = np.repeat(TT, n_cells, 1)
 
-        y = np.arange(0, n_cells)[np.newaxis]
-        yT = y.T
-        yMat = np.repeat(yT, TT.size, 1)
-        yMat = yMat.T
+            y = np.arange(0, n_cells)[np.newaxis]
+            yT = y.T
+            yMat = np.repeat(yT, TT.size, 1)
+            yMat = yMat.T
 
-        # graf prikazuje koncentracijo molekule v celicah skozi cas
-        # fig, ax1 = plt.subplots(subplot_kw={'projection': '3d'})
-        # ax1.plot_wireframe(TMat, yMat, A_full)
-        # ax1.set_title("concentration in cells through time")
+            # graf prikazuje koncentracijo molekule v celicah skozi cas
+            # fig, ax1 = plt.subplots(subplot_kw={'projection': '3d'})
+            # ax1.plot_wireframe(TMat, yMat, A_full)
+            # ax1.set_title("concentration in cells through time")
 
-        # graf prikazuje razporeditev celic
-        # plt.figure(4)
-        # plt.imshow(CELLS, cmap='binary')
-        # plt.xlabel(r'$\mu m$')
-        # plt.xticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
-        # plt.ylabel(r'$\mu m$')
-        # plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
+            # graf prikazuje razporeditev celic
+            # plt.figure(4)
+            # plt.imshow(CELLS, cmap='binary')
+            # plt.xlabel(r'$\mu m$')
+            # plt.xticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
+            # plt.ylabel(r'$\mu m$')
+            # plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
 
-        plt.figure(5)
-        plt.plot(TT, A_full)
-        plt.xlabel('time')
-        plt.ylabel('concentration')
+            plt.figure(5)
+            plt.plot(TT, A_full)
+            plt.xlabel('time')
+            plt.ylabel('concentration')
 
-        # za vse plote prikazat
-        plt.show()
+            # za vse plote prikazat
+            plt.show()
 
-    saveConfig = False
-    if (first_synced_index < math.inf) and saveConfig:
-        name = './reports/' + str(os.getpid()) + '_' + str(time.time()) + 'score_' + str(first_synced_index) + '.txt'
-        with open(name, 'w') as file:
-            string = '\n'.join(str(e) for e in inputs)
-            file.write(string + '\n-----\n' + str(first_synced_index))
+        saveConfig = False
+        if (first_synced_index < math.inf) and saveConfig:
+            name = './reports/' + str(os.getpid()) + '_' + str(time.time()) + 'score_' + str(first_synced_index) + '.txt'
+            with open(name, 'w') as file:
+                string = '\n'.join(str(e) for e in inputs)
+                file.write(string + '\n-----\n' + str(first_synced_index))
 
-    print('ending process with PID {}\n'.format(os.getpid()))
+        print('ending process with PID {}\n'.format(os.getpid()))
 
-    # return first synced index so you know in scipy.optimize.anneal what is better
-    return first_synced_index
+        # return first synced index so you know in scipy.optimize.anneal what is better
+        return first_synced_index
+
+    except:
+        return math.inf
 
 
 if __name__ == "__main__":
@@ -273,7 +279,7 @@ if __name__ == "__main__":
     # for p in processes:
     #     p.join()
 
-    print("starting simulation with differential_evolution")
+    print("starting simulation with optimization algorithms")
 
     b_alpha = (0.001, 10)
     b_alpha0 = (0.001, 10)
@@ -309,7 +315,14 @@ if __name__ == "__main__":
             [alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta],
             [alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta]]
 
-    result = differential_evolution(simulate, bounds, init=init, updating='deferred', workers=4, strategy='currenttobest1bin', maxiter=250)
+    x0 = [alpha, alpha0, Kd, delta_m, delta_p, n, beta, kappa, kS0, kS1, kSe, eta]
+
+    # diff evol
+    # result = differential_evolution(simulate, bounds, init=init, updating='deferred', workers=4, strategy='currenttobest1bin', maxiter=250)
+
+    # dual anneal, CHANGE maxiter to get BETTER results
+    result = dual_annealing(simulate, bounds=bounds, seed=1234, maxiter=1, x0=x0)
+
 
     print(result.x)
     print(result.fun)
