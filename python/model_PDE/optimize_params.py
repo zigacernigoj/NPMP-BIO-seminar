@@ -24,7 +24,7 @@ def get_sync_index(A_full, treshold, num_of_elements):
         min_for_cell = np.min(A_full[sync_index:, 0])
         max_for_cell = np.max(A_full[sync_index:, 0])
 
-        if (max_for_cell - min_for_cell) < 50:
+        if (max_for_cell - min_for_cell) < 150:
             return math.inf
         else:
             return synced[0][0]

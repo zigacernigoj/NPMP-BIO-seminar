@@ -20,7 +20,7 @@ def simulate(inputs):
     print('starting process with PID {}'.format(os.getpid()))
 
     # fix random seed for testing purposes
-    # np.random.seed(1)
+    np.random.seed(1)
 
     # ali rob predstavlja konec prostora ali so meje neskoncne?
     # periodic_bounds = 1
@@ -197,13 +197,13 @@ def simulate(inputs):
         # tabela,
         # razlika med min in max,
         # stevilo zaporednih casovnih korakov, ki zadostujejo razliki med min in max
-        first_synced_index = get_sync_index(A_full, 2, 3)
+        first_synced_index = get_sync_index(A_full, 2, 10)
 
         print("first synced", first_synced_index)
 
 
         # GRAPHS
-        showPlots = False
+        showPlots = True
         if (first_synced_index < math.inf) and showPlots:
             print("preparing plots")
 
