@@ -242,15 +242,18 @@ def simulate(inputs):
             # plt.ylabel(r'$\mu m$')
             # plt.yticks(np.arange(0, size), np.arange(0, size/2, step=0.5))
 
-            plt.figure(5)
+            fig5 = plt.figure(5)
             plt.plot(TT, A_full)
             plt.xlabel('time')
             plt.ylabel('concentration')
 
-            # za vse plote prikazat
-            plt.show()
+            name = './reports/concentration' + str(os.getpid()) + '_' + str(time.time()) + 'score_' + str(first_synced_index) + '.png'
+            fig5.savefig(name)
 
-        saveConfig = False
+            # za vse plote prikazat
+            # plt.show()
+
+        saveConfig = True
         if (first_synced_index < math.inf) and saveConfig:
             name = './reports/' + str(os.getpid()) + '_' + str(time.time()) + 'score_' + str(first_synced_index) + '.txt'
             with open(name, 'w') as file:
@@ -263,6 +266,7 @@ def simulate(inputs):
         return first_synced_index
 
     except:
+        print('ending process with PID {} because of error\n'.format(os.getpid()))
         return math.inf
 
 
@@ -326,5 +330,11 @@ if __name__ == "__main__":
 
     print(result.x)
     print(result.fun)
+
+    name = './reports/finalscore_' + str(result.fun) + '.txt'
+    with open(name, 'w') as file:
+        string = '\n'.join(str(e) for e in result.x)
+        file.write(string + '\n-----\n' + str(result.fun))
+
     print("simulation ended")
 
